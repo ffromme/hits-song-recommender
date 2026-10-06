@@ -1,0 +1,12 @@
+# Rahasia
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Cache lokal (hasil LLM, indeks ChromaDB) yang bisa dibuat ulang
+.cache/

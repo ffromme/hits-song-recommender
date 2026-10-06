@@ -1,0 +1,14 @@
+# Install semua: pip install -r requirements.txt
+anthropic>=1.11
+pydantic>=2.13
+python-dotenv>=1.2
+pyyaml>=6.0
+pytest>=9.1
+
+# Tahap 3 (paket besar, total sekitar 1 GB terinstal):
+# sentence-transformers ikut menarik PyTorch. Di Windows, PyTorch dari PyPI adalah versi CPU.
+sentence-transformers>=6.1
+chromadb>=1.5
+
+# Paket proyek ini sendiri (mode editable), supaya `import hits_rec` bisa dipakai di scripts/ dan tests/
+-e .
