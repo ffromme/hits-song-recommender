@@ -54,7 +54,10 @@ hits-song-recommender/
 - GPU: RTX 3050 6GB tersedia, tapi dipakai **PyTorch CPU**. Model embedding kecil cukup cepat di CPU untuk katalog ratusan sampai ribuan lagu, dan versi GPU berukuran ±2,5 GB.
 - Embedding: `intfloat/multilingual-e5-small` (bukan `paraphrase-multilingual-MiniLM-L12-v2`), karena dilatih khusus untuk pencarian kalimat pendek → dokumen. Wajib awalan `query: ` / `passage: `.
 - Vector DB: ChromaDB lokal.
-- LLM: Anthropic API lewat `llm.py`; model dari `LLM_MODEL` di `.env` (default `claude-opus-5-5`).
+- LLM: provider gratis lewat API OpenAI-compatible (paket `openai`), dibungkus `llm.py`. Diatur dari `.env`:
+  `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. Default Gemini `gemini-3.8-flash` (free tier); alternatif Groq/OpenRouter
+  ada di `.env.example`. Output JSON diminta lewat prompt lalu divalidasi pydantic + retry, supaya jalan di semua provider.
+  Catatan: data free tier Gemini dipakai Google untuk melatih model.
 
 ## Status terakhir
 Tahap 1 selesai: `schemas.py` (Song, MoodLabel, LabeledSong, Intent, Recommendation), `catalog.py` (load + validasi + dedup + song_id stabil; ringkasan: `python -m hits_rec.catalog`), `tests/test_catalog.py` (4 test lulus).

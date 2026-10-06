@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 # 4. Siapkan rahasia
 copy .env.example .env
-# lalu isi ANTHROPIC_API_KEY di file .env
+# lalu isi LLM_API_KEY di file .env (default: key Gemini gratis dari https://aistudio.google.com/apikey)
 ```
 
 ## Katalog lagu
