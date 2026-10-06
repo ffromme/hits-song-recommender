@@ -25,7 +25,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 
 ## Tahapan
 0. Scaffolding (selesai)
-1. Skema & katalog: `schemas.py`, `catalog.py`
+1. Skema & katalog: `schemas.py`, `catalog.py` (selesai)
 2. Pelabelan mood: `llm.py`, `labeling.py`, `scripts/01_label_catalog.py`
 3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py`
 4. Intent: `intent.py`
@@ -57,4 +57,4 @@ hits-song-recommender/
 - LLM: Anthropic API lewat `llm.py`; model dari `LLM_MODEL` di `.env` (default `claude-opus-5-5`).
 
 ## Status terakhir
-Tahap 0 selesai: struktur, venv, dependensi ringan terinstal, `config.py`, template `songs.csv` 10 lagu.
+Tahap 1 selesai: `schemas.py` (Song, MoodLabel, LabeledSong, Intent, Recommendation), `catalog.py` (load + validasi + dedup + song_id stabil; ringkasan: `python -m hits_rec.catalog`), `tests/test_catalog.py` (4 test lulus).
