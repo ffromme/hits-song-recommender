@@ -26,7 +26,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 ## Tahapan
 0. Scaffolding (selesai)
 1. Skema & katalog: `schemas.py`, `catalog.py` (selesai)
-2. Pelabelan mood: `llm.py`, `labeling.py`, `scripts/01_label_catalog.py`
+2. Pelabelan mood: `llm.py`, `labeling.py`, `scripts/01_label_catalog.py` (selesai)
 3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py`
 4. Intent: `intent.py`
 5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py`
@@ -55,9 +55,15 @@ hits-song-recommender/
 - Embedding: `intfloat/multilingual-e5-small` (bukan `paraphrase-multilingual-MiniLM-L12-v2`), karena dilatih khusus untuk pencarian kalimat pendek → dokumen. Wajib awalan `query: ` / `passage: `.
 - Vector DB: ChromaDB lokal.
 - LLM: provider gratis lewat API OpenAI-compatible (paket `openai`), dibungkus `llm.py`. Diatur dari `.env`:
-  `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. Default Gemini `gemini-3.8-flash` (free tier); alternatif Groq/OpenRouter
+  `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. Default Gemini `gemini-3.5-flash`. **Free tier Gemini = 20 request/hari PER MODEL** (kuota tiap model terpisah;
+  3.7/3.8 sering 503 "high demand"). Karena itu pelabelan di-batch 20 lagu/request. Alternatif Groq/OpenRouter
   ada di `.env.example`. Output JSON diminta lewat prompt lalu divalidasi pydantic + retry, supaya jalan di semua provider.
   Catatan: data free tier Gemini dipakai Google untuk melatih model.
+- Cache LLM: `.cache/llm/<sha256>.json` (kunci = model + prompt + nama schema). Aman dihapus.
+- Pelabelan inkremental: lagu yang sudah ada di `songs_labeled.jsonl` dilewati; hapus file itu untuk melabel ulang.
 
 ## Status terakhir
-Tahap 1 selesai: `schemas.py` (Song, MoodLabel, LabeledSong, Intent, Recommendation), `catalog.py` (load + validasi + dedup + song_id stabil; ringkasan: `python -m hits_rec.catalog`), `tests/test_catalog.py` (4 test lulus).
+Tahap 2 selesai: 102/102 lagu berlabel (`gemini-3.5-flash`, 6 request, ±170 detik). Hanya 1 lagu confidence < 0.6
+(`Everything u Are` - Hindia, 0.40) yang perlu ditinjau manual. Test: 5 lulus (`tests/test_catalog.py`, `tests/test_labeling.py`).
+Perhatian untuk Tahap 4-7: intent + rerank = 2 request per rekomendasi, sehingga 20 request/hari/model di Gemini free
+tier tidak cukup untuk evaluasi; pertimbangkan Groq (1.000 request/hari, lebih cepat) untuk runtime.
