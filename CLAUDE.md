@@ -30,7 +30,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py` (selesai)
 4. Intent: `intent.py` (selesai; demo: `python -m hits_rec.intent`)
 5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py` (selesai; demo: `python -m hits_rec.retrieval`)
-6. Rerank & host_line: `rerank.py`, `pipeline.py`
+6. Rerank & host_line: `rerank.py`, `pipeline.py` (selesai; demo: `python -m hits_rec.pipeline`)
 7. CLI & evaluasi: `scripts/03_recommend.py`, `scripts/04_evaluate.py`, `data/eval/queries.yaml`
 8. Rapikan: README, tests, update file ini
 
@@ -58,7 +58,8 @@ hits-song-recommender/
 - Windows Smart App Control sempat memblokir DLL (`rpds`, `sklearn`). Pemilik mengubahnya ke mode Evaluation;
   jika muncul "An Application Control policy has blocked this file", cek log Code Integrity (event 3077).
 - LLM: provider gratis lewat API OpenAI-compatible (paket `openai`), dibungkus `llm.py`. Diatur dari `.env`:
-  `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. Default Gemini `gemini-3.5-flash`. **Free tier Gemini = 20 request/hari PER MODEL** (kuota tiap model terpisah;
+  `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. Default kode Gemini `gemini-3.5-flash`; yang dipakai runtime: Groq
+  `qwen/qwen3.8-27b` (±0,4 s/panggilan, 1.000 request/hari, **8.000 token/menit**). **Free tier Gemini = 20 request/hari PER MODEL** (kuota tiap model terpisah;
   3.7/3.8 sering 503 "high demand"). Karena itu pelabelan di-batch 20 lagu/request. Alternatif Groq/OpenRouter
   ada di `.env.example`. Output JSON diminta lewat prompt lalu divalidasi pydantic + retry, supaya jalan di semua provider.
   Catatan: data free tier Gemini dipakai Google untuk melatih model.
@@ -72,11 +73,16 @@ hits-song-recommender/
   ("feat.", "and", "&") dipecah. Mood: vector search k + len(cooldown), filter bahasa di ChromaDB (diabaikan bila
   bahasa itu tidak ada), cooldown, lalu filter energi lunak (buang yang bertolak belakang, dahulukan yang sama).
   Cooldown tidak diterapkan ke request eksplisit; pipeline (Tahap 6) yang menangani. Konstanta di `config.py`.
+- Pipeline (`Recommender.recommend`): moderasi/not_a_request -> tanpa lagu. Eksplisit ditemukan -> lagu itu (LLM
+  hanya menulis host_line); hanya artis -> LLM pilih dari lagu artis itu; tidak ada di katalog / kena cooldown ->
+  cari mirip via mood_profile (tanpa filter bahasa). Mood kosong setelah filter -> filter dilonggarkan.
+  Rerank gagal / nomor di luar daftar -> kandidat teratas + host_line bawaan. Lagu terpilih otomatis masuk riwayat.
+  Model embedding dimuat di `Recommender.__init__` (startup ±8 s). Maks 8 kandidat ke LLM (`RERANK_CANDIDATES`).
 - Pelabelan inkremental: lagu yang sudah ada di `songs_labeled.jsonl` dilewati; hapus file itu untuk melabel ulang.
 
 ## Status terakhir
-Tahap 5 selesai: fuzzy match ±3–6 ms, vector search + filter ±33 ms; memuat model embedding pertama kali ±5–23 s
-(harus dimuat saat startup untuk live). Test: 11 lulus.
-LLM aktif di `.env`: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free` (50 request/hari, latensi intent rata-rata
-18,4 s, TIDAK layak untuk live). Groq (`openai/gpt-oss-120b` / `qwen/qwen3.8-27b`) disarankan; pemilik harus
-memutuskan sebelum Tahap 6.
+Tahap 6 selesai: pipeline end-to-end dengan Groq `qwen/qwen3.8-27b`; total ±0,7–1,2 s per komentar. Lonjakan ±5,5 s
+terjadi saat batas 8.000 token/menit Groq tercapai (1 rekomendasi ±2.200 token: intent ±700 + rerank ±1.200, jadi
+±3–4 rekomendasi/menit). Ide penghematan: kurangi RERANK_CANDIDATES / persingkat deskripsi kandidat. Test: 13 lulus.
+Kualitas host_line kadang kurang rapi (campur Inggris, typo, "Halo pembaca"); alternatif lagu mirip untuk request
+eksplisit kadang kurang nyambung (mis. Lathi -> I'm Yours).

@@ -72,3 +72,13 @@ class Recommendation(BaseModel):
     reason: str
     host_line: str  # 1–2 kalimat gaya penyiar, tanpa mengutip lirik
     candidates_considered: list[str]  # song_id kandidat yang dipertimbangkan
+
+
+class PipelineResult(BaseModel):
+    """Hasil lengkap satu komentar: dipakai CLI & evaluasi (Tahap 7)."""
+
+    comment: str
+    intent: Intent | None = None
+    recommendation: Recommendation | None = None  # None = tidak ada lagu yang diantrikan
+    note: str  # penjelasan singkat jalur yang diambil, mis. "lagu tidak ada di katalog, disarankan yang mirip"
+    timings: dict[str, float] = {}  # detik per langkah: intent, retrieval, rerank, total

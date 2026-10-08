@@ -34,3 +34,4 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 TOP_K_CANDIDATES = 15  # jumlah kandidat dari vector search untuk request mood
 COOLDOWN_N = 10  # lagu yang diputar dalam N lagu terakhir tidak direkomendasikan lagi
 FUZZY_MIN_SCORE = 0.8  # kemiripan minimal (0–1) judul/artis untuk dianggap cocok pada request eksplisit
+RERANK_CANDIDATES = 8  # kandidat teratas yang dikirim ke LLM rerank (lebih sedikit = prompt lebih pendek & cepat)
