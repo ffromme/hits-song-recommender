@@ -28,7 +28,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 1. Skema & katalog: `schemas.py`, `catalog.py` (selesai)
 2. Pelabelan mood: `llm.py`, `labeling.py`, `scripts/01_label_catalog.py` (selesai)
 3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py` (selesai)
-4. Intent: `intent.py`
+4. Intent: `intent.py` (selesai; demo: `python -m hits_rec.intent`)
 5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py`
 6. Rerank & host_line: `rerank.py`, `pipeline.py`
 7. CLI & evaluasi: `scripts/03_recommend.py`, `scripts/04_evaluate.py`, `data/eval/queries.yaml`
@@ -62,11 +62,16 @@ hits-song-recommender/
   3.7/3.8 sering 503 "high demand"). Karena itu pelabelan di-batch 20 lagu/request. Alternatif Groq/OpenRouter
   ada di `.env.example`. Output JSON diminta lewat prompt lalu divalidasi pydantic + retry, supaya jalan di semua provider.
   Catatan: data free tier Gemini dipakai Google untuk melatih model.
-- Cache LLM: `.cache/llm/<sha256>.json` (kunci = model + prompt + nama schema). Aman dihapus.
+- Cache LLM: `.cache/llm/<sha256>.json` (kunci = model + reasoning_effort + prompt + nama schema). Aman dihapus.
+- `LLM_REASONING_EFFORT` (opsional, .env) diteruskan sebagai `reasoning_effort`. Respons HTTP 200 tanpa `choices`
+  (error provider di body, mis. OpenRouter "provider overloaded") diulang 3x dengan jeda.
+- Intent: komentar dibungkus `<komentar>` dan diperlakukan sebagai data (anti prompt-injection).
+  explicit_song juga mengisi mood_profile (untuk cari lagu mirip bila tidak ada di katalog).
+  language_hint hanya bila penonton tegas minta bahasa tertentu, tidak ditebak dari bahasa komentar.
 - Pelabelan inkremental: lagu yang sudah ada di `songs_labeled.jsonl` dilewati; hapus file itu untuk melabel ulang.
 
 ## Status terakhir
-Tahap 3 selesai: indeks 102 lagu di ChromaDB; query ±25–30 ms (setelah model dimuat). Skor kemiripan e5 mengumpul
-di 0,80–0,83, jadi yang penting urutannya, bukan angka mutlaknya.
-LLM aktif di `.env`: Groq. `llama-3.1-8b-instant` tidak tersedia (404); model Groq yang tersedia: `openai/gpt-oss-120b`,
-`openai/gpt-oss-20b`, `qwen/qwen3.8-27b` (1.000 request/hari). Perlu diganti sebelum Tahap 4.
+Tahap 4 selesai: 13 komentar uji, type 13/13 benar, 2 komentar kasar ditandai moderasi, prompt injection tidak diikuti.
+LLM aktif di `.env`: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free` (50 request/hari). Latensi intent rata-rata
+18,4 s (maks 65 s, sering "provider overloaded") dengan reasoning_effort=low: TIDAK layak untuk live. Groq
+(`openai/gpt-oss-120b` / `qwen/qwen3.8-27b`, ±0,2–0,6 s) disarankan untuk runtime; keputusan di tangan pemilik.

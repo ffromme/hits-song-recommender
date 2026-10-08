@@ -58,7 +58,7 @@ class Intent(BaseModel):
     # untuk explicit_song
     title: str | None = None
     artist: str | None = None
-    # untuk mood_request
+    # untuk mood_request (dan explicit_song: mood lagu yang diminta, untuk cari lagu mirip bila tidak ada di katalog)
     mood_profile: str | None = None  # kalimat yang di-embed untuk pencarian
     energy_hint: Energy | None = None
     language_hint: str | None = None

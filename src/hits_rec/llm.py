@@ -10,13 +10,14 @@
 import hashlib
 import json
 import re
+import time
 from collections import Counter
 from typing import TypeVar
 
 from openai import OpenAI
 from pydantic import BaseModel, ValidationError
 
-from hits_rec.config import LLM_API_KEY, LLM_BASE_URL, LLM_CACHE_DIR, LLM_MODEL
+from hits_rec.config import LLM_API_KEY, LLM_BASE_URL, LLM_CACHE_DIR, LLM_MODEL, LLM_REASONING_EFFORT
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -42,9 +43,29 @@ def _extract_json(text: str) -> str:
     return (match.group(1) if match else text).strip()
 
 
+def _chat(messages: list[dict], max_empty: int = 3) -> str:
+    """Satu panggilan chat. Error HTTP (429/5xx) sudah diulang otomatis oleh SDK.
+
+    Beberapa provider (mis. OpenRouter) mengirim error di dalam respons HTTP 200 tanpa jawaban,
+    mis. "provider overloaded". Respons kosong seperti itu diulang dengan jeda 2, 4, ... detik.
+    """
+    extra = {"reasoning_effort": LLM_REASONING_EFFORT} if LLM_REASONING_EFFORT else {}
+    for attempt in range(1, max_empty + 1):
+        stats["api_calls"] += 1
+        response = _get_client().chat.completions.create(model=LLM_MODEL, messages=messages, **extra)
+        if response.choices:
+            return response.choices[0].message.content or ""
+        error = (response.model_extra or {}).get("error", "respons kosong")
+        if attempt == max_empty:
+            raise RuntimeError(f"LLM tidak memberi jawaban setelah {max_empty} percobaan: {error}")
+        stats["empty_retries"] += 1
+        time.sleep(2 * attempt)
+    raise AssertionError("unreachable")
+
+
 def complete_json(system: str, user: str, schema: type[T], max_attempts: int = 3) -> T:
     """Kirim prompt ke LLM dan kembalikan jawaban yang sudah tervalidasi sebagai objek `schema`."""
-    key_src = json.dumps([LLM_MODEL, schema.__name__, system, user], ensure_ascii=False)
+    key_src = json.dumps([LLM_MODEL, LLM_REASONING_EFFORT, schema.__name__, system, user], ensure_ascii=False)
     cache_path = LLM_CACHE_DIR / f"{hashlib.sha256(key_src.encode()).hexdigest()}.json"
     if cache_path.exists():
         stats["cache_hits"] += 1
@@ -52,9 +73,7 @@ def complete_json(system: str, user: str, schema: type[T], max_attempts: int = 3
 
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
     for attempt in range(1, max_attempts + 1):
-        stats["api_calls"] += 1
-        response = _get_client().chat.completions.create(model=LLM_MODEL, messages=messages)
-        text = response.choices[0].message.content or ""
+        text = _chat(messages)
         try:
             result = schema.model_validate_json(_extract_json(text))
         except ValidationError as err:
