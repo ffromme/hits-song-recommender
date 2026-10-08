@@ -29,3 +29,8 @@ LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT") or None
 
 # Model embedding multibahasa (mendukung Bahasa Indonesia)
 EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
+
+# Retrieval
+TOP_K_CANDIDATES = 15  # jumlah kandidat dari vector search untuk request mood
+COOLDOWN_N = 10  # lagu yang diputar dalam N lagu terakhir tidak direkomendasikan lagi
+FUZZY_MIN_SCORE = 0.8  # kemiripan minimal (0–1) judul/artis untuk dianggap cocok pada request eksplisit

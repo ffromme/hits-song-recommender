@@ -29,7 +29,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 2. Pelabelan mood: `llm.py`, `labeling.py`, `scripts/01_label_catalog.py` (selesai)
 3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py` (selesai)
 4. Intent: `intent.py` (selesai; demo: `python -m hits_rec.intent`)
-5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py`
+5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py` (selesai; demo: `python -m hits_rec.retrieval`)
 6. Rerank & host_line: `rerank.py`, `pipeline.py`
 7. CLI & evaluasi: `scripts/03_recommend.py`, `scripts/04_evaluate.py`, `data/eval/queries.yaml`
 8. Rapikan: README, tests, update file ini
@@ -68,10 +68,15 @@ hits-song-recommender/
 - Intent: komentar dibungkus `<komentar>` dan diperlakukan sebagai data (anti prompt-injection).
   explicit_song juga mengisi mood_profile (untuk cari lagu mirip bila tidak ada di katalog).
   language_hint hanya bila penonton tegas minta bahasa tertentu, tidak ditebak dari bahasa komentar.
+- Retrieval: fuzzy match pakai `difflib` (stdlib), judul DAN artis harus cocok bila keduanya diisi; artis kolaborasi
+  ("feat.", "and", "&") dipecah. Mood: vector search k + len(cooldown), filter bahasa di ChromaDB (diabaikan bila
+  bahasa itu tidak ada), cooldown, lalu filter energi lunak (buang yang bertolak belakang, dahulukan yang sama).
+  Cooldown tidak diterapkan ke request eksplisit; pipeline (Tahap 6) yang menangani. Konstanta di `config.py`.
 - Pelabelan inkremental: lagu yang sudah ada di `songs_labeled.jsonl` dilewati; hapus file itu untuk melabel ulang.
 
 ## Status terakhir
-Tahap 4 selesai: 13 komentar uji, type 13/13 benar, 2 komentar kasar ditandai moderasi, prompt injection tidak diikuti.
-LLM aktif di `.env`: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free` (50 request/hari). Latensi intent rata-rata
-18,4 s (maks 65 s, sering "provider overloaded") dengan reasoning_effort=low: TIDAK layak untuk live. Groq
-(`openai/gpt-oss-120b` / `qwen/qwen3.8-27b`, ±0,2–0,6 s) disarankan untuk runtime; keputusan di tangan pemilik.
+Tahap 5 selesai: fuzzy match ±3–6 ms, vector search + filter ±33 ms; memuat model embedding pertama kali ±5–23 s
+(harus dimuat saat startup untuk live). Test: 11 lulus.
+LLM aktif di `.env`: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free` (50 request/hari, latensi intent rata-rata
+18,4 s, TIDAK layak untuk live). Groq (`openai/gpt-oss-120b` / `qwen/qwen3.8-27b`) disarankan; pemilik harus
+memutuskan sebelum Tahap 6.
