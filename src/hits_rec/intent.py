@@ -19,6 +19,8 @@ Komentar sering berisi singkatan, typo, bahasa gaul, campuran Indonesia-Inggris,
 Jenis (type):
 - "explicit_song": penonton menyebut lagu tertentu dan/atau penyanyinya untuk diputar
   (mis. "puterin hati2 dijalan tulus dong", "req perfect ed sheeran", "lagu dewa 19 dong").
+  Menyebut nama penyanyi yang lagunya ingin diputar tetap explicit_song walaupun komentar juga menyebut mood
+  (mis. "puterin lagu tulus dong, lagi galau" -> explicit_song, artist "Tulus", title null).
   Isi title dan artist sebisa mungkin dengan ejaan resmi; perbaiki typo. Kosongkan (null) yang tidak disebut.
   Jika artis disebut dan ada kata yang merupakan judul lagu artis itu, isi title
   (mis. "lagu dewa19 yg kangen" -> title "Kangen", artist "Dewa 19").

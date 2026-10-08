@@ -10,6 +10,7 @@ def titles(results):
 def test_find_explicit_tolerates_typos():
     assert titles(find_explicit("separuh napas", "dewa19"))[0] == "Separuh Nafas"
     assert titles(find_explicit("hati hati dijalan", None))[0] == "Hati-Hati di Jalan"
+    assert titles(find_explicit("Hati2 Dijalan", "Tulus"))[0] == "Hati-Hati di Jalan"  # kata ulang "2"
 
 
 def test_find_explicit_artist_only_matches_collaborations():

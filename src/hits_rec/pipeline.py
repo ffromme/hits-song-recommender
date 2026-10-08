@@ -112,6 +112,21 @@ DEMO_COMMENTS = [
 ]
 
 
+def format_result(result: PipelineResult) -> str:
+    """Tampilan hasil untuk terminal (dipakai demo & scripts/03_recommend.py)."""
+    steps = " ".join(f"{k}={v:.2f}s" for k, v in result.timings.items())
+    lines = [f"   intent : {result.intent.type if result.intent else '-'} | {result.note}"]
+    if result.recommendation:
+        r = result.recommendation
+        lines += [
+            f"   lagu   : {r.song.title} — {r.song.artist}  (dari {len(r.candidates_considered)} kandidat)",
+            f"   alasan : {r.reason}",
+            f"   host   : {r.host_line}",
+        ]
+    lines.append(f"   waktu  : {steps}")
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
     from hits_rec.config import LLM_MODEL
 
@@ -119,14 +134,4 @@ if __name__ == "__main__":
     recommender = Recommender()
     print(f"Model LLM: {LLM_MODEL} | startup: {time.perf_counter() - start:.1f} s\n")
     for comment in DEMO_COMMENTS:
-        result = recommender.recommend(comment)
-        t = result.timings
-        steps = " ".join(f"{k}={v:.2f}s" for k, v in t.items())
-        print(f"💬 {comment}")
-        print(f"   intent : {result.intent.type if result.intent else '-'} | {result.note}")
-        if result.recommendation:
-            r = result.recommendation
-            print(f"   lagu   : {r.song.title} — {r.song.artist}  (dari {len(r.candidates_considered)} kandidat)")
-            print(f"   alasan : {r.reason}")
-            print(f"   host   : {r.host_line}")
-        print(f"   waktu  : {steps}\n")
+        print(f"💬 {comment}\n{format_result(recommender.recommend(comment))}\n")

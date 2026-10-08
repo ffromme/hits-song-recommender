@@ -24,6 +24,9 @@ T = TypeVar("T", bound=BaseModel)
 # Hitungan sederhana untuk dilaporkan script: berapa panggilan API vs diambil dari cache
 stats: Counter = Counter()
 
+# Set False untuk selalu memanggil API (mis. saat mengukur latensi). Jawaban tetap disimpan ke cache.
+cache_enabled = True
+
 _client: OpenAI | None = None
 
 
@@ -67,7 +70,7 @@ def complete_json(system: str, user: str, schema: type[T], max_attempts: int = 3
     """Kirim prompt ke LLM dan kembalikan jawaban yang sudah tervalidasi sebagai objek `schema`."""
     key_src = json.dumps([LLM_MODEL, LLM_REASONING_EFFORT, schema.__name__, system, user], ensure_ascii=False)
     cache_path = LLM_CACHE_DIR / f"{hashlib.sha256(key_src.encode()).hexdigest()}.json"
-    if cache_path.exists():
+    if cache_enabled and cache_path.exists():
         stats["cache_hits"] += 1
         return schema.model_validate_json(cache_path.read_text(encoding="utf-8"))
 

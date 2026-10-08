@@ -31,7 +31,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 4. Intent: `intent.py` (selesai; demo: `python -m hits_rec.intent`)
 5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py` (selesai; demo: `python -m hits_rec.retrieval`)
 6. Rerank & host_line: `rerank.py`, `pipeline.py` (selesai; demo: `python -m hits_rec.pipeline`)
-7. CLI & evaluasi: `scripts/03_recommend.py`, `scripts/04_evaluate.py`, `data/eval/queries.yaml`
+7. CLI & evaluasi: `scripts/03_recommend.py`, `scripts/04_evaluate.py`, `data/eval/queries.yaml` (selesai)
 8. Rapikan: README, tests, update file ini
 
 ## Struktur direktori
@@ -78,11 +78,15 @@ hits-song-recommender/
   cari mirip via mood_profile (tanpa filter bahasa). Mood kosong setelah filter -> filter dilonggarkan.
   Rerank gagal / nomor di luar daftar -> kandidat teratas + host_line bawaan. Lagu terpilih otomatis masuk riwayat.
   Model embedding dimuat di `Recommender.__init__` (startup ±8 s). Maks 8 kandidat ke LLM (`RERANK_CANDIDATES`).
+- Evaluasi: 22 query di `queries.yaml` dijalankan berurutan dalam satu sesi (cooldown ikut berlaku), dengan
+  ekspektasi yang dicek otomatis. Cache LLM dimatikan (`llm.cache_enabled = False`) agar latensi nyata;
+  `--pause 16` menjaga di bawah 8.000 token/menit Groq. Laporan: `outputs/eval_report.md`.
+- Fuzzy match memakai `_match_key`: kata ulang "hati2" -> "hati hati" dan spasi dibuang ("dijalan" = "di jalan").
 - Pelabelan inkremental: lagu yang sudah ada di `songs_labeled.jsonl` dilewati; hapus file itu untuk melabel ulang.
 
 ## Status terakhir
-Tahap 6 selesai: pipeline end-to-end dengan Groq `qwen/qwen3.8-27b`; total ±0,7–1,2 s per komentar. Lonjakan ±5,5 s
-terjadi saat batas 8.000 token/menit Groq tercapai (1 rekomendasi ±2.200 token: intent ±700 + rerank ±1.200, jadi
-±3–4 rekomendasi/menit). Ide penghematan: kurangi RERANK_CANDIDATES / persingkat deskripsi kandidat. Test: 13 lulus.
-Kualitas host_line kadang kurang rapi (campur Inggris, typo, "Halo pembaca"); alternatif lagu mirip untuk request
-eksplisit kadang kurang nyambung (mis. Lathi -> I'm Yours).
+Tahap 7 selesai. Evaluasi (Groq `qwen/qwen3.8-27b`, cache OFF, jeda 16 s): cek otomatis 21/22 lolos; latensi total
+rata-rata 1,40 s, median 1,16 s, maks 3,98 s (intent median 0,65 s, retrieval 0,04 s, rerank 0,51 s); startup ±11 s.
+Satu-satunya yang gagal: mood samar "hari ini capek tp seneng" terbaca not_a_request (kasus abu-abu, hasilnya
+berubah-ubah antar-run). host_line kadang kurang rapi (campur Inggris, "gue", typo); nilai manual belum diisi.
+Batas Groq 8.000 token/menit (±3–4 rekomendasi/menit) masih jadi hambatan untuk live ramai. Test: 13 lulus.

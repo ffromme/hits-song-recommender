@@ -50,9 +50,15 @@ def catalog() -> dict[str, LabeledSong]:
     return {s.song_id: s for s in load_labeled()}
 
 
+def _match_key(text: str) -> str:
+    """Bentuk pembanding: kata ulang ditulis lengkap ("hati2" -> "hati hati") dan spasi dibuang
+    ("dijalan" == "di jalan", "dewa19" == "dewa 19")."""
+    return re.sub(r"\b([^\W\d_]+)2\b", r"\1 \1", normalize(text)).replace(" ", "")
+
+
 def _similarity(a: str, b: str) -> float:
     """Kemiripan dua teks, 0 (beda total) sampai 1 (sama), setelah dinormalisasi."""
-    return SequenceMatcher(None, normalize(a), normalize(b)).ratio()
+    return SequenceMatcher(None, _match_key(a), _match_key(b)).ratio()
 
 
 def _artist_similarity(query: str, artist: str) -> float:
