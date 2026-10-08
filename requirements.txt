@@ -5,7 +5,7 @@ python-dotenv>=1.2
 pyyaml>=6.0
 pytest>=9.1
 
-# Tahap 3 (paket besar, total sekitar 1 GB terinstal):
+# Paket besar (total sekitar 1,4 GB terinstal), untuk embedding & indeks vektor:
 # sentence-transformers ikut menarik PyTorch. Di Windows, PyTorch dari PyPI adalah versi CPU.
 sentence-transformers>=6.1
 chromadb>=1.5

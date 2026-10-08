@@ -22,8 +22,8 @@ LOW_CONFIDENCE = 0.6
 # LLM lewat API "OpenAI-compatible": Gemini, OpenRouter, Groq, dll. cukup ganti 3 nilai ini di .env.
 # Rahasia hanya dari .env, tidak pernah ditulis di kode.
 LLM_API_KEY = os.getenv("LLM_API_KEY")
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.5-flash")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
+LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3.8-27b")
 # Opsional: seberapa lama model "berpikir" sebelum menjawab (mis. low). Lebih rendah = lebih cepat. Kosong = default model.
 LLM_REASONING_EFFORT = os.getenv("LLM_REASONING_EFFORT") or None
 
