@@ -14,6 +14,7 @@ LABELED_PATH = DATA_DIR / "labeled" / "songs_labeled.jsonl"
 EVAL_QUERIES_PATH = DATA_DIR / "eval" / "queries.yaml"
 OUTPUTS_DIR = ROOT_DIR / "outputs"
 LLM_CACHE_DIR = ROOT_DIR / ".cache" / "llm"  # cache jawaban LLM (di-ignore git, aman dihapus)
+CHROMA_DIR = ROOT_DIR / ".cache" / "chroma"  # indeks vektor; dibuat ulang oleh scripts/02_build_index.py
 
 # Lagu dengan confidence di bawah ini perlu ditinjau manual (LLM kurang yakin mengenali lagunya)
 LOW_CONFIDENCE = 0.6

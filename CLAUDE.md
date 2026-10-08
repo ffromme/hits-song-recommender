@@ -27,7 +27,7 @@ Alur: komentar → `intent` (LLM) → `retrieval` (fuzzy match atau vector searc
 0. Scaffolding (selesai)
 1. Skema & katalog: `schemas.py`, `catalog.py` (selesai)
 2. Pelabelan mood: `llm.py`, `labeling.py`, `scripts/01_label_catalog.py` (selesai)
-3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py`
+3. Embedding & indeks: `embedding.py`, `index.py`, `scripts/02_build_index.py` (selesai)
 4. Intent: `intent.py`
 5. Retrieval & filter (fuzzy match, vector search, cooldown): `retrieval.py`
 6. Rerank & host_line: `rerank.py`, `pipeline.py`
@@ -53,7 +53,10 @@ hits-song-recommender/
 - Python 3.14 (venv `.venv`). 3.10 juga terpasang tapi end-of-life Oktober 2026; semua dependensi tersedia untuk 3.14.
 - GPU: RTX 3050 6GB tersedia, tapi dipakai **PyTorch CPU**. Model embedding kecil cukup cepat di CPU untuk katalog ratusan sampai ribuan lagu, dan versi GPU berukuran ±2,5 GB.
 - Embedding: `intfloat/multilingual-e5-small` (bukan `paraphrase-multilingual-MiniLM-L12-v2`), karena dilatih khusus untuk pencarian kalimat pendek → dokumen. Wajib awalan `query: ` / `passage: `.
-- Vector DB: ChromaDB lokal.
+- Vector DB: ChromaDB lokal di `.cache/chroma/` (cosine, telemetry dimatikan), dibangun ulang penuh tiap
+  `02_build_index.py`. Teks yang di-embed = mood_description + moods + suitable_situations (tanpa judul/artis).
+- Windows Smart App Control sempat memblokir DLL (`rpds`, `sklearn`). Pemilik mengubahnya ke mode Evaluation;
+  jika muncul "An Application Control policy has blocked this file", cek log Code Integrity (event 3077).
 - LLM: provider gratis lewat API OpenAI-compatible (paket `openai`), dibungkus `llm.py`. Diatur dari `.env`:
   `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. Default Gemini `gemini-3.5-flash`. **Free tier Gemini = 20 request/hari PER MODEL** (kuota tiap model terpisah;
   3.7/3.8 sering 503 "high demand"). Karena itu pelabelan di-batch 20 lagu/request. Alternatif Groq/OpenRouter
@@ -63,7 +66,7 @@ hits-song-recommender/
 - Pelabelan inkremental: lagu yang sudah ada di `songs_labeled.jsonl` dilewati; hapus file itu untuk melabel ulang.
 
 ## Status terakhir
-Tahap 2 selesai: 102/102 lagu berlabel (`gemini-3.5-flash`, 6 request, ±170 detik). Hanya 1 lagu confidence < 0.6
-(`Everything u Are` - Hindia, 0.40) yang perlu ditinjau manual. Test: 5 lulus (`tests/test_catalog.py`, `tests/test_labeling.py`).
-Perhatian untuk Tahap 4-7: intent + rerank = 2 request per rekomendasi, sehingga 20 request/hari/model di Gemini free
-tier tidak cukup untuk evaluasi; pertimbangkan Groq (1.000 request/hari, lebih cepat) untuk runtime.
+Tahap 3 selesai: indeks 102 lagu di ChromaDB; query ±25–30 ms (setelah model dimuat). Skor kemiripan e5 mengumpul
+di 0,80–0,83, jadi yang penting urutannya, bukan angka mutlaknya.
+LLM aktif di `.env`: Groq. `llama-3.1-8b-instant` tidak tersedia (404); model Groq yang tersedia: `openai/gpt-oss-120b`,
+`openai/gpt-oss-20b`, `qwen/qwen3.8-27b` (1.000 request/hari). Perlu diganti sebelum Tahap 4.
