@@ -68,6 +68,7 @@ python scripts/01_label_catalog.py    # labeli mood lagu yang belum berlabel (LL
 python scripts/02_build_index.py      # bangun ulang indeks vektor + 3 query uji
 python scripts/03_recommend.py        # CLI interaktif: ketik komentar, lihat lagu + host_line
 python scripts/04_evaluate.py --pause 16   # evaluasi semua request uji -> outputs/eval_report.md
+python scripts/05_web.py              # web UI sederhana di http://127.0.0.1:8000 (untuk demo/presentasi)
 pytest                                # test (tanpa memanggil API)
 ```
 
